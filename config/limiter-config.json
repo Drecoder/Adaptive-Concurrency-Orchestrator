@@ -1,0 +1,17 @@
+{
+  "concurrency": {
+    "min_limit": 5,
+    "max_limit": 100,
+    "headroom": 2,
+    "smoothing": 0.2
+  },
+  "latency": {
+    "baseline_ms": 200,
+    "tolerance_multiplier": 1.5,
+    "p99_alert_threshold": 1000
+  },
+  "business_logic": {
+    "service_name": "formedics-clinical-search",
+    "cost_optimization_mode": "spot_preferred"
+  }
+}

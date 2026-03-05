@@ -1,0 +1,10 @@
+{
+  "mig_config": {
+    "project_id": "formedics-production",
+    "zone": "us-central1-a",
+    "managed_instance_group_name": "search-service-mig",
+    "scaling_step_size": 1,
+    "max_instances": 10,
+    "cooldown_period_sec": 60
+  }
+}
