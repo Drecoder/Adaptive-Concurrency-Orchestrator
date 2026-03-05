@@ -10,7 +10,8 @@ frontend and a WordPress REST API backend to prevent service degradation during 
 
 ## 1. The Core Problem: The "Lag Effect"
 
-In a Headless WordPress architecture, complex clinical searches often bypass the Object Cache (Redis) and hit the database directly.
+In a Headless WordPress architecture, complex clinical searches often bypass the Object Cache (Redis)
+and hit the database directly.
 
 * **Saturation:** When PHP-FPM workers saturate, response times drift from a "Golden Path" of **250ms** to several seconds.
 * **The Death Spiral:** Standard CPU-based autoscalers react too slowly to this "Lag Effect," leading to a total bottleneck of the clinical data layer.
