@@ -1,3 +1,4 @@
+const config = require('../../config/constants')
 /**
  * MOCK ACTUATOR: The Simulated Infrastructure
  * Purpose: Simulates "New Field" creation with a delay.
@@ -10,6 +11,10 @@ class MockActuator {
 
     async triggerMigScaleUp() {
         if (this.isScaling) return { status: 'ALREADY_SCALING' };
+
+        if (this.totalInstances >= config.GCP.MAX_INSTANCES) { 
+            return { status: 'LIMIT_REACHED'};
+        }
 
         this.isScaling = true;
         console.log(`\n[INFRASTRUCTURE] 🛠  Signal Received: Demand Complexity exceeds Golden Path.`);

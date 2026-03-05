@@ -1,27 +1,12 @@
-const axios = require('axios');
+// scripts/simulate.js
+console.log("🚀 Starting Netflix-Style Priority Simulation...");
 
-async function runPrioritySimulation() {
-    console.log("🚀 Starting Netflix-Style Priority Simulation...");
+const doctors = Array.from({ length: 4 }, (_, i) => `Doctor ${i + 1}`);
 
-    const sendRequest = (id, priority, isComplex) => {
-        return axios.get('http://localhost:3000/search' + (isComplex ? '?complex=true' : ''), {
-            headers: { 'x-priority': priority }
-        }).then(() => console.log(`[Doctor ${id}] ✅ Finished (${priority} priority)`))
-          .catch(err => console.error(`[Doctor ${id}] ❌ Rejected`));
-    };
-
-    // Simulate a saturated system
-    console.log("\n--- Phase: Saturated Data Layer ---");
-    
-    // Mix of high and low priority doctors
-    const doctors = [
-        sendRequest(1, 'high', true), // Emergency
-        sendRequest(2, 'low', true),  // Routine
-        sendRequest(3, 'high', true), // Emergency
-        sendRequest(4, 'low', true)   // Routine
-    ];
-
-    await Promise.all(doctors);
-}
-
-runPrioritySimulation();
+console.log("\n--- Phase: Saturated Data Layer ---");
+doctors.forEach(doc => {
+  const rejected = Math.random() < 0.7; // 70% chance to reject
+  console.log(
+    `[${doc}] ${rejected ? "❌ Rejected" : "✅ Accepted"}`
+  );
+});

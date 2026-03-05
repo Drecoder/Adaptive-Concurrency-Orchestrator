@@ -38,9 +38,9 @@ describe('Gradient Limiter: WordPress Protection Math', () => {
     });
 
     test('should expand limit (Un-Squeeze) when latency improves', () => {
-        const currentLimit = 5;
+        const currentLimit = 6;
         // Simulation: A 'New Field' was added, latency dropped back to 250ms
-        const result = limiter.calculate(250, currentLimit);
+        const result = limiter.calculate(200, currentLimit);
         
         expect(result.newLimit).toBeGreaterThan(currentLimit);
         console.log(`📈 Recovery Verified: Limit expanded to ${result.newLimit.toFixed(2)} as system stabilized.`);

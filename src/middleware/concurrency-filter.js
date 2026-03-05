@@ -1,45 +1,50 @@
-/**
- * NEXT.JS ADAPTIVE MIDDLEWARE
- * Specifically tuned for WordPress REST API bottlenecks.
- */
-const createMiddleware = (logicEngine, actuator) => {
-    let activeRequests = 0;
-    // We start with a conservative window for PHP-FPM workers
-    let currentLimit = 10; 
+const createMiddleware = (limiter, actuator) => {
 
-    return async (req, res, next) => {
-        const priority = req.headers['x-priority'] || 'low';
+    // Instance-level state (NOT global)
+    let currentConcurrency = 0;
 
-        // 1. GATEKEEPING (The Squeeze)
-        if (activeRequests >= currentLimit) {
-            if (priority === 'high') {
-                console.log(`⚠️  [URGENT] Bypassing Squeeze for Clinical Search.`);
-                actuator.triggerMigScaleUp(); 
-            } else {
-                console.log(`⏳ [LOAD SHED] Throttling routine WP request.`);
-                // Return 429 to the frontend to trigger a retry/cached view
-                return res.status(429).json({ error: 'System Busy' });
+    return (req, res, next) => {
+
+        const isHighPriority = req.headers['x-priority'] === 'high';
+
+        // --- Mock latency source (for now) ---
+        const latency = req.headers['x-latency']
+            ? Number(req.headers['x-latency'])
+            : limiter.minRT;
+
+        // --- Compute allowed concurrency limit ---
+        const { newLimit } = limiter.calculate(latency, currentConcurrency);
+
+        // --- HIGH PRIORITY BYPASS ---
+        if (isHighPriority) {
+
+            if (currentConcurrency >= newLimit) {
+                actuator.triggerMigScaleUp();
             }
+
+            currentConcurrency++;
+
+            if (res.on) {
+                res.on('finish', () => currentConcurrency--);
+            }
+
+            return next();
         }
 
-        activeRequests++;
-        const wpStart = Date.now();
-
-        try {
-            // 2. THE WORK: Next.js calls WordPress
-            await next(); 
-        } finally {
-            // 3. THE FEEDBACK (Analyzing WP Performance)
-            const wpDuration = Date.now() - wpStart;
-            activeRequests--;
-
-            const result = logicEngine.calculate(wpDuration, currentLimit);
-            currentLimit = result.newLimit;
-
-            // Signal Felman if we identify the "Data Layer Lag"
-            if (wpDuration > (logicEngine.minRT * 3)) {
-                console.log(`🚨 [BOTTLENECK] WP REST API Lag: ${wpDuration}ms. Check PHP-FPM/Redis.`);
-            }
+        // --- NORMAL PRIORITY → enforce squeeze ---
+        if (currentConcurrency >= newLimit) {
+            return res.status(429).json({ error: 'Squeezed' });
         }
+
+        // --- Accept request ---
+        currentConcurrency++;
+
+        if (res.on) {
+            res.on('finish', () => currentConcurrency--);
+        }
+
+        next();
     };
 };
+
+module.exports = createMiddleware;

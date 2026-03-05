@@ -1,24 +1,26 @@
-const express = require('express');
-const createMiddleware = require('../src/middleware/concurrency-filter');
-const GradientLimiter = require('../src/limiters/gradient-limiter');
-const MockActuator = require('../src/actuators/mock-actuator');
-const { simulateWpResponse } = require('../src/services/wordpress');
-const { LIMITER, GCP } = require('../config/constants');
+// scripts/index.js
+console.log("🏁 Starting Local Orchestrator (mocked)");
 
+const express = require("express");
 const app = express();
-const limiter = new GradientLimiter(LIMITER);
-const actuator = new MockActuator(GCP);
+app.use(express.json());
 
-// Initialize the Middleware
-const orchestrator = createMiddleware(limiter, actuator);
-
-app.get('/api/search', orchestrator, async (req, res) => {
-    const isComplex = req.query.complex === 'true';
-    const result = await simulateWpResponse(isComplex);
-    res.status(result.status).json(result);
+// Mock /api/search endpoint with dynamic failures
+app.all("/api/search", (req, res) => {
+  const failChance = 0.3; // 30% requests fail
+  setTimeout(() => {
+    if (Math.random() < failChance) {
+      res.status(503).json({ error: "Service Unavailable (simulated)" });
+    } else {
+      res.json({
+        results: [
+          { id: 1, title: "Demo Search Result 1" },
+          { id: 2, title: "Demo Search Result 2" }
+        ]
+      });
+    }
+  }, Math.random() * 100 + 50);
 });
 
-app.listen(3000, () => {
-    console.log('🚀 Local Orchestrator running on http://localhost:3000');
-    console.log('Targeting Mock WordPress (Golden Path: 250ms)');
-});
+const PORT = 3000;
+app.listen(PORT, () => console.log(`🚀 Local Orchestrator listening on http://localhost:${PORT}`));

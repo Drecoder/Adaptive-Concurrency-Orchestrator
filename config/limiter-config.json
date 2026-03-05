@@ -6,9 +6,10 @@
     "smoothing": 0.2
   },
   "latency": {
-    "baseline_ms": 200,
+    "baseline_ms": 250,
     "tolerance_multiplier": 1.5,
-    "p99_alert_threshold": 1000
+    "p99_alert_threshold": 1000,
+    "stability_band_ms": 10
   },
   "business_logic": {
     "service_name": "formedics-clinical-search",
