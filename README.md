@@ -14,7 +14,8 @@ In a Headless WordPress architecture, complex clinical searches often bypass the
 and hit the database directly.
 
 * **Saturation:** When PHP-FPM workers saturate, response times drift from a "Golden Path" of **250ms** to several seconds.
-* **The Death Spiral:** Standard CPU-based autoscalers react too slowly to this "Lag Effect," leading to a total bottleneck of the clinical data layer.
+* **The Death Spiral:** Standard CPU-based autoscalers react too slowly to this "Lag Effect,"
+leading to a total bottleneck of the clinical data layer.
 
 ---
 
