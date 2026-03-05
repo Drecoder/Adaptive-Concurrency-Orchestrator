@@ -3,7 +3,8 @@
 
 ### Headless WordPress & Next.js Infrastructure Shield
 
-This repository contains a **Proof of Work (PoW)** for an adaptive concurrency controller. It is designed to sit between a Next.js frontend and a WordPress REST API backend to prevent service degradation during high-complexity search spikes.
+This repository contains a **Proof of Work (PoW)** for an adaptive concurrency controller. It is designed to sit between a Next.js
+frontend and a WordPress REST API backend to prevent service degradation during high-complexity search spikes.
 
 ---
 
