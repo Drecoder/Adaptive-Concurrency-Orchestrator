@@ -2,17 +2,26 @@ const config = require("../../config/constants");
 
 class GradientLimiter {
   constructor() {
-    this.minRT = config.LIMITER.MIN_RT; // Golden Path (250ms)
-    this.minLimit = config.LIMITER.MIN_CONCURRENCY; // 5
-    this.maxLimit = config.LIMITER.MAX_CONCURRENCY; // 10
+    this.minRT = config.LIMITER.MIN_RT; // SLI Target (Golden Path): The idealized latency baseline.
+    this.minLimit = config.LIMITER.MIN_CONCURRENCY; // Floor: Minimum throughput to prevent service starvation.
+    this.maxLimit = config.LIMITER.MAX_CONCURRENCY; // Ceiling: Maximum load the WordPress origin can safely ingest.
 
     // Smoothing state
-    this.ema = null;
-    this.alpha = config.LIMITER.SMOOTHING;
-    this.band = config.LIMITER.STABILITY_BAND;
+    this.ema = null; // Internal state for the Exponential Moving Average.
+    // Initialized to null to handle the "Cold Start" sequence;
+    // ensures the first latency sample seeds the baseline
+    // without being dampened by a zero-init.
+    this.alpha = config.LIMITER.SMOOTHING; // EMA Smoothing Factor (α): A calculated heuristic representing the
+    // system's "memory." Derived from the desired Time Constant (τ)
+    // to balance reactivity vs. stability.
+    this.band = config.LIMITER.STABILITY_BAND; // this.band. This is my Stability Band. In a production GCP environment,
+    // we’d determine this value by looking at our historical $P_{50}$ to $P_{95}$ variance in Cloud Monitoring.
   }
 
   calculate(latency, currentLimit) {
+    // Defensive Fallbacks: Ensuring "Safe" inputs for the controller.
+    // Prevents NaN propagation if the telemetry source (Prometheus/Logs)
+    // is intermittent or if the origin times out.
     const safeLatency = Number(latency) || this.minRT;
     const safeCurrentLimit = Number(currentLimit) || this.minLimit;
 
@@ -66,6 +75,9 @@ class GradientLimiter {
     // --- 6. Clamp to allowed range ---
     newLimit = Math.max(this.minLimit, Math.min(this.maxLimit, newLimit));
 
+    // Normalizing telemetry output: Truncating to 2 decimal places to
+    // maintain precision while ensuring "clean" structured logs for
+    // BigQuery ingestion and Prometheus scraping.
     return {
       newLimit: Number.parseFloat(newLimit.toFixed(2)),
       gradient: Number.parseFloat(gradient.toFixed(2)),
